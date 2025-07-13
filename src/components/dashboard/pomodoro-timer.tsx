@@ -3,14 +3,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, TimerReset } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PomodoroTimerProps {
   onTimerComplete: (timeElapsed: number) => void;
 }
 
+const durationOptions = [
+    { label: "15 min", value: 15 * 60 },
+    { label: "25 min", value: 25 * 60 },
+    { label: "45 min", value: 45 * 60 },
+]
+
 export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
-  const pomodoroDuration = 25 * 60;
-  const [timeRemaining, setTimeRemaining] = useState(pomodoroDuration);
+  const [duration, setDuration] = useState(25 * 60);
+  const [timeRemaining, setTimeRemaining] = useState(duration);
   const [isActive, setIsActive] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -28,7 +35,7 @@ export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
           if (prevTime <= 1) {
             stopTimer();
             setIsActive(false);
-            onTimerComplete(pomodoroDuration);
+            onTimerComplete(duration);
             return 0;
           }
           return prevTime - 1;
@@ -38,11 +45,17 @@ export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
       stopTimer();
     }
     return () => stopTimer();
-  }, [isActive, stopTimer, onTimerComplete, pomodoroDuration]);
+  }, [isActive, stopTimer, onTimerComplete, duration]);
+  
+  useEffect(() => {
+    if (!isActive) {
+        setTimeRemaining(duration);
+    }
+  }, [duration, isActive]);
 
   const handleToggle = () => {
     if (timeRemaining === 0) {
-        setTimeRemaining(pomodoroDuration);
+        setTimeRemaining(duration);
     }
     setIsActive(!isActive);
   };
@@ -50,8 +63,14 @@ export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
   const handleReset = () => {
     stopTimer();
     setIsActive(false);
-    setTimeRemaining(pomodoroDuration);
+    setTimeRemaining(duration);
   };
+  
+  const handleDurationChange = (newDuration: number) => {
+    if (!isActive) {
+        setDuration(newDuration);
+    }
+  }
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -60,7 +79,20 @@ export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-6">
+       <div className="flex items-center gap-2">
+            {durationOptions.map(option => (
+                <Button 
+                    key={option.value}
+                    variant={duration === option.value ? "default" : "secondary"}
+                    onClick={() => handleDurationChange(option.value)}
+                    disabled={isActive}
+                    className="w-24"
+                >
+                    {option.label}
+                </Button>
+            ))}
+        </div>
       <div className="font-mono text-8xl md:text-9xl font-bold text-primary">
         {formatTime(timeRemaining)}
       </div>

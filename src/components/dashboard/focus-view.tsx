@@ -31,9 +31,6 @@ export function FocusView({ todo, onExitFocus }: FocusViewProps) {
         <p className="text-xl md:text-3xl text-muted-foreground mt-2">{todo.title}</p>
       </div>
       <PomodoroTimer onTimerComplete={handleTimerComplete} />
-      <p className="text-muted-foreground mt-12 text-center text-sm">
-        A 25-minute timer has started. Stay focused! You can exit this mode anytime.
-      </p>
     </div>
   );
 }
