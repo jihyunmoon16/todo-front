@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 interface PomodoroTimerProps {
   onTimerComplete: (timeElapsed: number) => void;
+  initialDuration: number;
+  onDurationChange: (duration: number) => void;
 }
 
 const durationOptions = [
@@ -15,8 +17,8 @@ const durationOptions = [
     { label: "25 min", value: 25 * 60 },
 ]
 
-export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
-  const [duration, setDuration] = useState(25 * 60);
+export function PomodoroTimer({ onTimerComplete, initialDuration, onDurationChange }: PomodoroTimerProps) {
+  const [duration, setDuration] = useState(initialDuration);
   const [timeRemaining, setTimeRemaining] = useState(duration);
   const [isActive, setIsActive] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -69,6 +71,7 @@ export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
   const handleDurationChange = (newDuration: number) => {
     if (!isActive) {
         setDuration(newDuration);
+        onDurationChange(newDuration);
     }
   }
 

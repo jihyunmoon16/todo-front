@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,13 +22,38 @@ const priorityOrder: Record<EisenhowerQuadrant, number> = {
   Q4: 4,
 };
 
+const POMODORO_DURATION_KEY = "pomodoroDuration";
+const DEFAULT_POMODORO_DURATION = 25 * 60; // 25 minutes in seconds
+
 export function Dashboard({ initialTodos }: DashboardProps) {
   const [todos, setTodos] = useState<Todo[]>(initialTodos.map(t => ({...t, dueDate: new Date(t.dueDate)})));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [todoToEdit, setTodoToEdit] = useState<Todo | null>(null);
   const [activeTab, setActiveTab] = useState("today");
   const [focusedTodo, setFocusedTodo] = useState<Todo | null>(null);
+  const [pomodoroDuration, setPomodoroDuration] = useState(DEFAULT_POMODORO_DURATION);
   const router = useRouter();
+  
+  useEffect(() => {
+    try {
+        const savedDuration = localStorage.getItem(POMODORO_DURATION_KEY);
+        if (savedDuration) {
+            setPomodoroDuration(JSON.parse(savedDuration));
+        }
+    } catch (error) {
+        console.error("Could not read pomodoro duration from localStorage", error);
+        setPomodoroDuration(DEFAULT_POMODORO_DURATION);
+    }
+  }, []);
+
+  const handlePomodoroDurationChange = (newDuration: number) => {
+    setPomodoroDuration(newDuration);
+    try {
+        localStorage.setItem(POMODORO_DURATION_KEY, JSON.stringify(newDuration));
+    } catch (error) {
+        console.error("Could not save pomodoro duration to localStorage", error);
+    }
+  };
 
   const handleLogout = () => {
     router.push("/login");
@@ -108,6 +133,8 @@ export function Dashboard({ initialTodos }: DashboardProps) {
       <FocusView
         todo={focusedTodo}
         onExitFocus={handleExitFocus}
+        initialDuration={pomodoroDuration}
+        onDurationChange={handlePomodoroDurationChange}
       />
     );
   }

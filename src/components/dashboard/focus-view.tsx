@@ -8,9 +8,11 @@ import { X } from "lucide-react";
 interface FocusViewProps {
   todo: Todo;
   onExitFocus: (timeElapsedInMinutes?: number) => void;
+  initialDuration: number;
+  onDurationChange: (duration: number) => void;
 }
 
-export function FocusView({ todo, onExitFocus }: FocusViewProps) {
+export function FocusView({ todo, onExitFocus, initialDuration, onDurationChange }: FocusViewProps) {
   const handleTimerComplete = (timeElapsedInSeconds: number) => {
     onExitFocus(Math.floor(timeElapsedInSeconds / 60));
   };
@@ -30,7 +32,11 @@ export function FocusView({ todo, onExitFocus }: FocusViewProps) {
         <h1 className="text-2xl md:text-4xl font-bold">Focusing on:</h1>
         <p className="text-xl md:text-3xl text-muted-foreground mt-2">{todo.title}</p>
       </div>
-      <PomodoroTimer onTimerComplete={handleTimerComplete} />
+      <PomodoroTimer 
+        onTimerComplete={handleTimerComplete} 
+        initialDuration={initialDuration} 
+        onDurationChange={onDurationChange} 
+      />
     </div>
   );
 }
