@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Pause, Play, TimerReset } from "lucide-react";
 
 interface PomodoroTimerProps {
-  initialTimeInSeconds: number;
   onTimerComplete: (timeElapsed: number) => void;
 }
 
-export function PomodoroTimer({ initialTimeInSeconds, onTimerComplete }: PomodoroTimerProps) {
-  const [timeRemaining, setTimeRemaining] = useState(initialTimeInSeconds);
+export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
+  const pomodoroDuration = 25 * 60;
+  const [timeRemaining, setTimeRemaining] = useState(pomodoroDuration);
   const [isActive, setIsActive] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const pomodoroDuration = 25 * 60;
 
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -61,18 +60,20 @@ export function PomodoroTimer({ initialTimeInSeconds, onTimerComplete }: Pomodor
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-secondary p-2">
-      <div className="font-mono text-lg font-semibold text-primary">
+    <div className="flex flex-col items-center gap-4">
+      <div className="font-mono text-8xl md:text-9xl font-bold text-primary">
         {formatTime(timeRemaining)}
       </div>
-      <Button variant="ghost" size="icon" onClick={handleToggle} className="h-8 w-8">
-        {isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        <span className="sr-only">{isActive ? "Pause" : "Play"}</span>
-      </Button>
-      <Button variant="ghost" size="icon" onClick={handleReset} className="h-8 w-8">
-        <TimerReset className="h-4 w-4" />
-        <span className="sr-only">Reset</span>
-      </Button>
+      <div className="flex items-center gap-4">
+         <Button variant="ghost" size="lg" onClick={handleToggle} className="w-32">
+            {isActive ? <Pause className="mr-2 h-6 w-6" /> : <Play className="mr-2 h-6 w-6" />}
+            {isActive ? "Pause" : "Play"}
+        </Button>
+        <Button variant="outline" size="lg" onClick={handleReset} className="w-32">
+            <TimerReset className="mr-2 h-6 w-6" />
+            Reset
+        </Button>
+      </div>
     </div>
   );
 }

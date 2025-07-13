@@ -9,6 +9,7 @@ import { AddEditTodoDialog } from "./add-edit-todo-dialog";
 import type { Todo, EisenhowerQuadrant } from "@/lib/types";
 import { PlusCircle, LogOut } from "lucide-react";
 import { isToday, isThisWeek } from "date-fns";
+import { FocusView } from "./focus-view";
 
 interface DashboardProps {
   initialTodos: Todo[];
@@ -26,10 +27,10 @@ export function Dashboard({ initialTodos }: DashboardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [todoToEdit, setTodoToEdit] = useState<Todo | null>(null);
   const [activeTab, setActiveTab] = useState("today");
+  const [focusedTodo, setFocusedTodo] = useState<Todo | null>(null);
   const router = useRouter();
 
   const handleLogout = () => {
-    // This is a mock implementation. In a real app, you'd clear the session.
     router.push("/login");
   };
 
@@ -58,12 +59,10 @@ export function Dashboard({ initialTodos }: DashboardProps) {
     id?: string
   ) => {
     if (id) {
-      // Edit
       setTodos(
         todos.map((todo) => (todo.id === id ? { ...todo, ...data } : todo))
       );
     } else {
-      // Add
       const newTodo: Todo = {
         id: new Date().toISOString(),
         ...data,
@@ -76,9 +75,20 @@ export function Dashboard({ initialTodos }: DashboardProps) {
 
   const handleAddPomodoroTime = (id: string, minutes: number) => {
     setTodos(
-        todos.map((todo) => (todo.id === id ? { ...todo, pomodoroTime: todo.pomodoroTime + minutes } : todo))
+        todos.map((todo) => (todo.id === id ? { ...todo, pomodoroTime: (todo.pomodoroTime || 0) + minutes } : todo))
     )
   }
+
+  const handleStartFocus = (todo: Todo) => {
+    setFocusedTodo(todo);
+  };
+
+  const handleExitFocus = (timeElapsed?: number) => {
+    if (focusedTodo && timeElapsed) {
+      handleAddPomodoroTime(focusedTodo.id, timeElapsed);
+    }
+    setFocusedTodo(null);
+  };
 
   const sortedTodos = useMemo(() => {
     const filtered = todos.filter((todo) => {
@@ -92,6 +102,15 @@ export function Dashboard({ initialTodos }: DashboardProps) {
         return priorityOrder[a.quadrant] - priorityOrder[b.quadrant]
     });
   }, [todos, activeTab]);
+
+  if (focusedTodo) {
+    return (
+      <FocusView
+        todo={focusedTodo}
+        onExitFocus={handleExitFocus}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -118,10 +137,10 @@ export function Dashboard({ initialTodos }: DashboardProps) {
           <TabsTrigger value="this-week">This Week</TabsTrigger>
         </TabsList>
         <TabsContent value="today">
-          <TodoList todos={sortedTodos} onToggleComplete={handleToggleComplete} onDelete={handleDelete} onEdit={handleEdit} onAddPomodoroTime={handleAddPomodoroTime} />
+          <TodoList todos={sortedTodos} onToggleComplete={handleToggleComplete} onDelete={handleDelete} onEdit={handleEdit} onStartFocus={handleStartFocus} />
         </TabsContent>
         <TabsContent value="this-week">
-          <TodoList todos={sortedTodos} onToggleComplete={handleToggleComplete} onDelete={handleDelete} onEdit={handleEdit} onAddPomodoroTime={handleAddPomodoroTime}/>
+          <TodoList todos={sortedTodos} onToggleComplete={handleToggleComplete} onDelete={handleDelete} onEdit={handleEdit} onStartFocus={handleStartFocus}/>
         </TabsContent>
       </Tabs>
 
@@ -135,7 +154,15 @@ export function Dashboard({ initialTodos }: DashboardProps) {
   );
 }
 
-function TodoList({ todos, ...props }: { todos: Todo[] } & Omit<React.ComponentProps<typeof TodoItem>, 'todo'>) {
+interface TodoListProps {
+  todos: Todo[];
+  onToggleComplete: (id: string, completed: boolean) => void;
+  onDelete: (id: string) => void;
+  onEdit: (todo: Todo) => void;
+  onStartFocus: (todo: Todo) => void;
+}
+
+function TodoList({ todos, ...props }: TodoListProps) {
     if (todos.length === 0) {
         return (
             <div className="mt-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-card/50 p-12 text-center">

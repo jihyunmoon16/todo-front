@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { Todo, EisenhowerQuadrant } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,14 +9,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreVertical, Edit, Trash2, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { PomodoroTimer } from "./pomodoro-timer";
 
 interface TodoItemProps {
   todo: Todo;
   onToggleComplete: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
   onEdit: (todo: Todo) => void;
-  onAddPomodoroTime: (id: string, minutes: number) => void;
+  onStartFocus: (todo: Todo) => void;
 }
 
 const quadrantConfig: Record<
@@ -30,14 +28,8 @@ const quadrantConfig: Record<
   Q4: { label: "Not Urgent & Not Important", color: "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30" },
 };
 
-export function TodoItem({ todo, onToggleComplete, onDelete, onEdit, onAddPomodoroTime }: TodoItemProps) {
-  const [isTimerVisible, setIsTimerVisible] = useState(false);
+export function TodoItem({ todo, onToggleComplete, onDelete, onEdit, onStartFocus }: TodoItemProps) {
 
-  const handleTimerComplete = (timeElapsedInSeconds: number) => {
-    onAddPomodoroTime(todo.id, Math.floor(timeElapsedInSeconds / 60));
-    setIsTimerVisible(false);
-  };
-  
   return (
     <Card className={cn("transition-all", todo.completed && "bg-secondary/50")}>
       <CardHeader className="flex flex-row items-start justify-between gap-4 p-4">
@@ -87,10 +79,8 @@ export function TodoItem({ todo, onToggleComplete, onDelete, onEdit, onAddPomodo
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           {todo.pomodoroTime > 0 && <span>{todo.pomodoroTime} min focused</span>}
           <span>Due {formatDistanceToNow(todo.dueDate, { addSuffix: true })}</span>
-           {isTimerVisible ? (
-             <PomodoroTimer initialTimeInSeconds={25*60} onTimerComplete={handleTimerComplete} />
-           ) : (
-             !todo.completed && <Button variant="ghost" size="sm" onClick={() => setIsTimerVisible(true)}>
+           { !todo.completed && (
+             <Button variant="ghost" size="sm" onClick={() => onStartFocus(todo)}>
                 <Play className="mr-2 h-4 w-4" /> Start Focus
              </Button>
            )}
