@@ -10,9 +10,9 @@ interface PomodoroTimerProps {
 }
 
 const durationOptions = [
-    { label: "15 min", value: 15 * 60 },
+    { label: "5 min", value: 5 * 60 },
+    { label: "10 min", value: 10 * 60 },
     { label: "25 min", value: 25 * 60 },
-    { label: "45 min", value: 45 * 60 },
 ]
 
 export function PomodoroTimer({ onTimerComplete }: PomodoroTimerProps) {
