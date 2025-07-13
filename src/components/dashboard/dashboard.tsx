@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,15 +28,8 @@ export function Dashboard({ initialTodos }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("today");
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      router.push("/login");
-    }
-  }, [router]);
-
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    // This is a mock implementation. In a real app, you'd clear the session.
     router.push("/login");
   };
 
