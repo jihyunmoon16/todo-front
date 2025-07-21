@@ -14,7 +14,9 @@ interface FocusViewProps {
 
 export function FocusView({ todo, onExitFocus, initialDuration, onDurationChange }: FocusViewProps) {
   const handleTimerComplete = (timeElapsedInSeconds: number) => {
-    onExitFocus(Math.floor(timeElapsedInSeconds / 60));
+    // 1분 미만(테스트용 10초 등)도 최소 1분으로 처리
+    const minutes = Math.max(1, Math.floor(timeElapsedInSeconds / 60));
+    onExitFocus(minutes);
   };
 
   return (

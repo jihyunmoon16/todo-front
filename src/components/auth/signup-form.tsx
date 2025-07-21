@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
+import axios from "@/lib/axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +37,7 @@ const formSchema = z.object({
 export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,17 +48,35 @@ export function SignupForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Mock API call
-    console.log("Signing up with:", values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    
+    try {
+      const response = await axios.post("/api/auth/signup", {
+        email: values.email,
+        password: values.password,
+        name: values.name,
+      });
 
-    // Mock success
-    toast({
-      title: "Account Created",
-      description: "Please login with your new credentials.",
-    });
+      toast({
+        title: "Account Created",
+        description: "Please login with your new credentials.",
+      });
 
-    router.push("/login");
+      router.push("/login");
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      
+      const errorMessage = error.response?.data?.message || "Failed to create account. Please try again.";
+      
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -110,8 +131,8 @@ export function SignupForm() {
             />
           </CardContent>
           <CardFooter className="flex flex-col">
-            <Button type="submit" className="w-full">
-              Create account
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating account..." : "Create account"}
             </Button>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}

@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Edit, Trash2, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
+import { differenceInDays } from "date-fns";
 
 interface TodoItemProps {
   todo: Todo;
-  onToggleComplete: (id: string, completed: boolean) => void;
-  onDelete: (id: string) => void;
+  onToggleComplete: (id: string | number, completed: boolean) => void;
+  onDelete: (id: string | number) => void;
   onEdit: (todo: Todo) => void;
   onStartFocus: (todo: Todo) => void;
 }
@@ -71,14 +71,25 @@ export function TodoItem({ todo, onToggleComplete, onDelete, onEdit, onStartFocu
       </CardHeader>
       <CardContent className="flex flex-wrap items-center justify-between gap-2 p-4 pt-0">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn("font-normal", quadrantConfig[todo.quadrant].color)}>
-            {quadrantConfig[todo.quadrant].label}
+          <Badge variant="outline" className={cn("font-normal", quadrantConfig[todo.quadrant || 'Q4'].color)}>
+            {quadrantConfig[todo.quadrant || 'Q4'].label}
           </Badge>
           {todo.tag && <Badge variant="secondary">{todo.tag}</Badge>}
         </div>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          {todo.pomodoroTime > 0 && <span>{todo.pomodoroTime} min focused</span>}
-          <span>Due {formatDistanceToNow(todo.dueDate, { addSuffix: true })}</span>
+          {(todo.pomodoroTime || 0) > 0 && <span>{todo.pomodoroTime} min focused</span>}
+          <span>
+            {(() => {
+              const daysDiff = differenceInDays(todo.dueDate, new Date());
+              if (daysDiff > 0) {
+                return `D+${daysDiff}`;
+              } else if (daysDiff < 0) {
+                return `D${daysDiff}`;
+              } else {
+                return 'D-day';
+              }
+            })()}
+          </span>
            { !todo.completed && (
              <Button variant="ghost" size="sm" onClick={() => onStartFocus(todo)}>
                 <Play className="mr-2 h-4 w-4" /> Start Focus

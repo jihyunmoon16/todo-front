@@ -36,7 +36,10 @@ import type { Todo, EisenhowerQuadrant } from "@/lib/types";
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  dueDate: z.date({ required_error: "Due date is required" }),
+  dueDate: z.preprocess(
+    (val) => typeof val === 'string' ? new Date(val) : val,
+    z.date({ required_error: "Due date is required" })
+  ),
   tag: z.string().optional(),
   quadrant: z.enum(["Q1", "Q2", "Q3", "Q4"], { required_error: "You need to select a quadrant." }),
 });
@@ -74,12 +77,19 @@ export function AddEditTodoDialog({ isOpen, setIsOpen, onSave, todoToEdit }: Add
       form.reset({
         title: todoToEdit.title,
         description: todoToEdit.description || "",
-        dueDate: todoToEdit.dueDate,
+        dueDate: new Date(todoToEdit.dueDate),
         tag: todoToEdit.tag || "",
         quadrant: todoToEdit.quadrant,
       });
-    } else if (!isOpen) {
-      form.reset();
+    } else if (isOpen && !todoToEdit) {
+      // 새로운 할 일 추가 시 오늘 날짜로 초기화
+      form.reset({
+        title: "",
+        description: "",
+        dueDate: new Date(),
+        tag: "",
+        quadrant: "Q2",
+      });
     }
   }, [isOpen, todoToEdit, form]);
 
@@ -150,9 +160,13 @@ export function AddEditTodoDialog({ isOpen, setIsOpen, onSave, todoToEdit }: Add
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value}
+                          selected={field.value ?? undefined}
                           onSelect={field.onChange}
-                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                          disabled={(date) => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            return date < today;
+                          }}
                           initialFocus
                         />
                       </PopoverContent>

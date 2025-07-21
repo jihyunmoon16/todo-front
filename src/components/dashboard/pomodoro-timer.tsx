@@ -12,6 +12,7 @@ interface PomodoroTimerProps {
 }
 
 const durationOptions = [
+    { label: "10 sec", value: 10 }, // 테스트용
     { label: "5 min", value: 5 * 60 },
     { label: "10 min", value: 10 * 60 },
     { label: "25 min", value: 25 * 60 },

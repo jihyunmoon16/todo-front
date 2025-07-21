@@ -25,6 +25,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import type { LoginResponse } from "@/lib/types";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -43,20 +45,37 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Mock API call
-    console.log("Logging in with:", values);
-    
-    // Mock success
-    toast({
-      title: "Login Successful",
-      description: "Redirecting to your dashboard...",
-    });
-    
-    // Store mock JWT in localStorage as requested
-    localStorage.setItem("authToken", "mock-jwt-token-for-eisenhower-app");
-    
-    router.push("/");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const res = await axios.post<LoginResponse>("/api/auth/login", {
+        email: values.email,
+        password: values.password,
+      });
+      
+      // 토큰과 사용자 정보 저장
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify({
+        id: res.data.id,
+        email: res.data.email,
+        name: res.data.name,
+      }));
+      
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${res.data.name}!`,
+      });
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      console.error("Login error response:", error.response);
+      console.error("Login error response data:", error.response?.data);
+      const errorMessage = error.response?.data?.message || "Failed to login. Please try again.";
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   }
 
   return (
@@ -67,9 +86,9 @@ export function LoginForm() {
           Enter your email below to login to your account.
         </CardDescription>
       </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="grid gap-4">
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
@@ -90,26 +109,21 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input type="password" placeholder="••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </CardContent>
-          <CardFooter className="flex flex-col">
-            <Button type="submit" className="w-full">
-              Sign in
-            </Button>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="underline">
-                Sign up
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
-      </Form>
+            <Button type="submit" className="w-full">Login</Button>
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex flex-col gap-2">
+        <div className="w-full text-center text-sm text-muted-foreground">
+          Don't have an account? <Link href="/signup" className="underline">Sign up</Link>
+        </div>
+      </CardFooter>
     </Card>
   );
 }

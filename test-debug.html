@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Form Test</title>
+</head>
+<body>
+    <h1>Debug Form Test</h1>
+    <p>이 페이지에서 폼 데이터가 어떻게 전송되는지 확인할 수 있습니다.</p>
+    
+    <form id="testForm">
+        <div>
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" value="Test Task" required>
+        </div>
+        <div>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description">Test description</textarea>
+        </div>
+        <div>
+            <label for="dueDate">Due Date:</label>
+            <input type="date" id="dueDate" name="dueDate" value="2025-07-18">
+        </div>
+        <div>
+            <label for="tag">Tag:</label>
+            <input type="text" id="tag" name="tag" value="Test">
+        </div>
+        <div>
+            <label for="quadrant">Quadrant:</label>
+            <select id="quadrant" name="quadrant">
+                <option value="Q1">Q1 - Urgent & Important</option>
+                <option value="Q2">Q2 - Not Urgent & Important</option>
+                <option value="Q3">Q3 - Urgent & Not Important</option>
+                <option value="Q4">Q4 - Not Urgent & Not Important</option>
+            </select>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                dueDate: formData.get('dueDate'),
+                tag: formData.get('tag'),
+                quadrant: formData.get('quadrant')
+            };
+            
+            console.log('원본 데이터:', data);
+            
+            // 백엔드 API에 맞게 데이터 변환
+            const apiData = {
+                ...data,
+                priority: data.quadrant, // quadrant를 priority로 매핑
+                dueDate: new Date(data.dueDate).toISOString(),
+            };
+            // quadrant 필드 제거 (백엔드에서 사용하지 않음)
+            delete apiData.quadrant;
+            
+            console.log('백엔드로 전송할 데이터:', apiData);
+            console.log('priority 값:', apiData.priority);
+            
+            document.getElementById('result').innerHTML = `
+                <h3>전송된 데이터:</h3>
+                <pre>${JSON.stringify(apiData, null, 2)}</pre>
+            `;
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/todos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify(apiData)
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.text();
+                console.log('Response body:', result);
+                
+                document.getElementById('result').innerHTML += `
+                    <h3>응답:</h3>
+                    <p>Status: ${response.status}</p>
+                    <pre>${result}</pre>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML += `
+                    <h3>에러:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 
